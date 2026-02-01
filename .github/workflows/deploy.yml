@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
         with:
@@ -25,6 +26,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "index.html"
           target: "/home/ubuntu/todo-app/"
+
       - name: Update Web Server
         uses: appleboy/ssh-action@master
         with:
@@ -33,3 +35,17 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo cp /home/ubuntu/todo-app/index.html /var/www/html/index.html
+
+      # Slack通知ステップ（ここが追加分です）
+      - name: Slack Notification
+        if: always() # 成功・失敗に関わらず必ず実行
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: 'デプロイ結果報告 🚀'
+          SLACK_MESSAGE: |
+            *Status*: ${{ job.status == 'success' ? '✅ 成功' : '❌ 失敗' }}
+            *Commit*: ${{ github.event.head_commit.message }}
+            *URL*: http://18.220.245.210/
+          SLACK_COLOR: ${{ job.status == 'success' ? '#36a64f' : '#ff0000' }}
+          SLACK_USERNAME: 'GitHub Actions Bot'
