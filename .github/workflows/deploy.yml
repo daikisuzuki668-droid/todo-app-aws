@@ -20,7 +20,7 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.EC2_IP }}
+          host: 18.220.245.210
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "index.html"
@@ -28,7 +28,7 @@ jobs:
       - name: Update Web Server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_IP }}
+          host: 18.220.245.210
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
