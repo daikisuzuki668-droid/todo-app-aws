@@ -1,33 +1,44 @@
-name: TODO App Deploy
+name: TODO App CI/CD
 
-# GitHubにコードがPushされたら実行してね！という合図
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest  # GitHubが用意した仮想の作業場で実行
-
+  # --- 【検品工程：CI】 ---
+  test:
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3 # あなたのコードを工場に運び込む
+      - uses: actions/checkout@v3
 
-    - name: Deploy to EC2
-      uses: appleboy/scp-action@master # ファイルをAWSに送るロボット
-      with:
-        host: 18.220.245.210        # ← ここを自分のEC2のIPに変える
-        username: ubuntu
-        key: ${{ secrets.EC2_SSH_KEY }} # 後で設定する「合鍵」
-        source: "index.html"
-        target: "/home/ubuntu/todo-app/"
+      - name: HTML Lint (構文チェック)
+        # htmlhintというツールを使って、index.htmlにミスがないか調べる
+        run: |
+          npm install -g htmlhint
+          htmlhint index.html
 
-    - name: Restart Nginx
-      uses: appleboy/ssh-action@master # AWSでコマンドを実行するロボット
-      with:
-        host: 18.220.245.210        # ← ここを自分のEC2のIPに変える
-        username: ubuntu
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          sudo cp /home/ubuntu/todo-app/index.html /var/www/html/index.html
-          # Dockerを使っている場合はここにdocker restartコマンドを書く
+  # --- 【出荷工程：CD】 ---
+  deploy:
+    # 👈 ここがポイント！testジョブが成功しない限り、このdeployは絶対に起動しない
+    needs: test 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_IP }} # セキュリティ向上のためIPもSecret推奨
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "index.html"
+          target: "/home/ubuntu/todo-app/"
+
+      - name: Update Web Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo cp /home/ubuntu/todo-app/index.html /var/www/html/index.html
