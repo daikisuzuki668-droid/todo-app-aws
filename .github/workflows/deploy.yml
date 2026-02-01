@@ -13,9 +13,7 @@ jobs:
 
       - name: HTML Lint (構文チェック)
         # htmlhintというツールを使って、index.htmlにミスがないか調べる
-        run: |
-          npm install -g htmlhint
-          htmlhint index.html
+        run: npx htmlhint index.html
 
   # --- 【出荷工程：CD】 ---
   deploy:
