@@ -41,7 +41,7 @@ jobs:
         if: always() # 成功・失敗に関わらず必ず実行
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: ${{ https://hooks.slack.com/services/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 }}
           SLACK_TITLE: 'デプロイ結果報告 🚀'
           SLACK_MESSAGE: |
             *Status*: ${{ job.status == 'success' ? '✅ 成功' : '❌ 失敗' }}
