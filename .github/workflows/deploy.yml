@@ -2,7 +2,7 @@ name: TODO App CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main , add-slack-notify]
 
 jobs:
   test:
